@@ -29,7 +29,8 @@ int circRad;
 int xPos;
 int yPos;
 int circNum;
-
+int beatPosX;
+int beatPosY;
 //Makes mousePressed the return val of a function. Needed b/c of bug in processingjs (can't have func and var with same name).
 boolean getMousePressValue() { return mousePressed; };
 boolean mouseVal = getMousePressValue();
@@ -73,6 +74,8 @@ void draw() {
   for (int i = 0; i < circs.length; i++ ) { 
     circs[i].drawCircle();
   }
+
+
   //// Updates and displays all beats in beatPosMap
 //  for (int i = 0; i < circs.length; i++ ) { 
 //    beatPosMap.get(str(i)).x
@@ -84,11 +87,6 @@ void draw() {
 //    println(me.getValue());
 //  }
 }
-
-
-
-
-
 
 
 
@@ -116,29 +114,39 @@ void mousePressed() {
   //// User adds beats, if b
   if (key == 'b') {
     for (int i = 0; i < circNum; i++) {
-      float a = abs(circPosArr[i].x-mouseX);
-      float b = abs(circPosArr[i].y-mouseY);
-      int c = int( sqrt((a*a)+(b*b)) );
+      float a = circPosArr[i].x-mouseX;
+      float b = circPosArr[i].y-mouseY;
+      float c = sqrt((a*a)+(b*b));
+
 
       if ((c >= (circRadArr[i]-10) && (c <= (circRadArr[i]+10)))) {
-        println("On the circle!");
+        console.log("On the circle!");
+        //FINDS POINT ON CIRCLE CLOSEST TO MOUSE CLICK
+        float angle = asin(b/circRadArr[i]);
+        //angle = (angle * 180)/PI;
+        console.log(angle);
+        console.log(circRadArr[i]);
+        beatPosX = int(sin(angle)*circRadArr[i]);
+        beatPosY = int(cos(angle)*circRadArr[i]);
+        console.log(beatPosX);
+        console.log(beatPosY);
 
-     float angle = asin(b/circRadArr[i]); // get angle of triangle between mousepos and circlepos. use this to scale the triangle to have hyp=circRad, and get the coordinates of the point on the circle circumference. 
-        println(angle);
+
+        beat = new Beat();
         
-        int beatPosX = mouseX;
-        int beatPosY = mouseY;
-        beat = new Beat(beatPosX, beatPosY);
-        //beat = new Beat(circPosArr[i].x, circPosArr[i].y);
-//        println(beat.beatX);
-//        println(beat.beatY);
-        beatPosMap.put(str(i), beat);
-//        println(beatPosMap.get(str(i)), beat.beatX);
-        //need to also continuously draw beats... place that in draw function, (see iterator)
 
-        //beatPosArr[i] = new Beat();
-        //Beat.addBeat
-        //add beat to that circle
+        beatPosMap.put(i, beat);
+
+        Iterator i = beatPosMap.entrySet().iterator();  // Get an iterator
+
+        while (i.hasNext()) {
+          Map.Entry me = (Map.Entry)i.next();
+          me.getValue();
+        }
+
+      
+
+       
       }
 
       //      if ( ( mouseX <= ((circPosArr[i].x) + 20) ) && ( mouseX >= ((circPosArr[i].x) - 20) )    &&    ( mouseY <= ((circPosArr[i].y) + 20) ) && ( mouseY >= ((circPosArr[i].y) - 20) )) {
@@ -148,6 +156,7 @@ void mousePressed() {
       //         translate(mouseX-a, mouseY-b);
       //         }
     }
+
 
     /* move circle by clicking and dragging center. need to also move beats with it!
      if (key == 'b') {
@@ -236,5 +245,9 @@ void mousePressed() {
     void addBeat(int x, int y) {
       beatX = x;
       beatY = y;
+    }
+
+    void drawBeat() {
+      ellipse(beatX, beatY, 10, 10);
     }
   }
