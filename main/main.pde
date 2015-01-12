@@ -29,6 +29,7 @@ int beatPosY;
 //Makes mousePressed the return val of a function. Needed b/c of bug in processingjs (can't have func and var with same name).
 boolean getMousePressValue() { return mousePressed; };
 boolean mouseVal = getMousePressValue();
+float speed = 0.1;
 
 
 void setup() {
@@ -54,12 +55,13 @@ void draw() {
   //// Updates and displays all circle objects in array.
   for (int i = 0; i < circs.length; i++ ) { 
     circs[i].drawCircle();
-    console.log()
   }
   //// Displays all beats, and updates their position
   for (int i = 0; i < beatArr.length; i++ ) { 
-    // console.log(i, beatArr[i].whichCircle());
+    console.log(i, beatArr[i].circNum);
+    beatArr[i].drawBeat();
     beatArr[i].incrementBeatPos();
+
     // int currentCircNum = beatArr[i].circNum;
     // console.log(currentCircNum);
     // int cx = circPosArr[currentCircNum].x;
@@ -73,7 +75,7 @@ void draw() {
     // beatArr[i].beatX = x;
     // beatArr[i].beatY = y;
 
-    beatArr[i].drawBeat();
+    
   }
 }
 
@@ -85,8 +87,7 @@ void mousePressed() {
     int a = mouseX;
     int b = mouseY;
     CirclePosition circPos = new CirclePosition(a, b);
-    circPosArr = (CirclePosition[]) append(circPosArr, circPos);
-    console.log(circPosArr);   
+    circPosArr = (CirclePosition[]) append(circPosArr, circPos); 
 
     mouseVal = true;
     xPos = mouseX;
@@ -207,6 +208,10 @@ void mousePressed() {
     int beatX;
     int beatY;
     int circNum;
+    int relBeatPosX;
+    int relBeatPosY;
+    float circumference;
+    float newAngle;
 
     Beat() {
     }
@@ -224,17 +229,26 @@ void mousePressed() {
       noFill();
     }
 
-    int whichCircle(){
-      // return circNum;
-    }
-
     void incrementBeatPos() {
       // beatX +=1;
       // beatY +=1;
 
-      
+      relBeatPosX = beatX - circPosArr[circNum].x;
+      relBeatPosY = beatY - circPosArr[circNum].y;
+      circumference = (2 * PI * circRadArr[circNum]);
+      console.log(relBeatPosX, relBeatPosY, circumference);
 
-      // using current x y position of beat and radius of circle, get x y relative to circle
+      // newAngle = atan(relBeatPosY / relBeatPosX) + .001; //(speed / 1000);
+      // console.log(newAngle);
+      // beatX = (sin(newAngle) * circRadArr[circNum]);
+      // beatY = (cos(newAngle) * circRadArr[circNum]);
+      // console.log(beatX, beatY);
+
+
+
+
+
+      // using current x y position of beat and position of circle, get x y relative to circle
       // calculate current angle in radians
       // 2PIr = circumference
       // add a constant deltaAngle to old angle. set to new angle. scale new angle to radius of circle.
@@ -247,5 +261,4 @@ void mousePressed() {
 
 
     }
-
   }
