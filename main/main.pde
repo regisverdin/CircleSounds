@@ -87,7 +87,7 @@ void mousePressed() {
     int a = mouseX;
     int b = mouseY;
     CirclePosition circPos = new CirclePosition(a, b);
-    circPosArr = (CirclePosition[]) append(circPosArr, circPos); 
+    circPosArr = (CirclePosition[]) append(circPosArr, circPos);
 
     mouseVal = true;
     xPos = mouseX;
@@ -171,94 +171,94 @@ void mousePressed() {
 
   ///////////////////////////////////////////////////  CLASSES  //////////////////////////////////////////////////////////////////
 
-  class Circle {
-    int circleX;
-    int circleY;
-    int circleW;
-    int circleH;
+class Circle {
+  int circleX;
+  int circleY;
+  int circleW;
+  int circleH;
 
-    Circle() {
-    } 
+  Circle() {
+  } 
 
-    void drawTempCircle(int a, int b, int c) {
-      circleX = a;
-      circleY = b;
-      circleW = circleH = c;
-      ellipse(circleX, circleY, circleW, circleH);
-    }
-    void drawCircle() {
-      ellipse(circleX, circleY, circleW, circleH);
-    }
+  void drawTempCircle(int a, int b, int c) {
+    circleX = a;
+    circleY = b;
+    circleW = circleH = c;
+    ellipse(circleX, circleY, circleW, circleH);
   }
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  void drawCircle() {
+    ellipse(circleX, circleY, circleW, circleH);
+  }
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  class CirclePosition {
-    int x;
-    int y;
+class CirclePosition {
+  int x;
+  int y;
 
-    CirclePosition(int a, int b) {
-      x = a;
-      y = b;
-    }
+  CirclePosition(int a, int b) {
+    x = a;
+    y = b;
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class Beat {
+  int beatX;
+  int beatY;
+  int circNum;
+  int relBeatPosX;
+  int relBeatPosY;
+  float circumference;
+  float newAngle;
+
+  Beat() {
   }
 
-
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  class Beat {
-    int beatX;
-    int beatY;
-    int circNum;
-    int relBeatPosX;
-    int relBeatPosY;
-    float circumference;
-    float newAngle;
-
-    Beat() {
-    }
-
-    void addBeat(int x, int y, int cNum) {
-      beatX = x;
-      beatY = y;
-      circNum = cNum;
-      console.log(circNum);
-    }
-
-    void drawBeat() {
-      fill(0,256,0);
-      ellipse(beatX, beatY, 3, 3);
-      noFill();
-    }
-
-    void incrementBeatPos() {
-      // beatX +=1;
-      // beatY +=1;
-
-      relBeatPosX = beatX - circPosArr[circNum].x;
-      relBeatPosY = beatY - circPosArr[circNum].y;
-      circumference = (2 * PI * circRadArr[circNum]);
-      console.log(relBeatPosX, relBeatPosY, circumference);
-
-      // newAngle = atan(relBeatPosY / relBeatPosX) + .001; //(speed / 1000);
-      // console.log(newAngle);
-      // beatX = (sin(newAngle) * circRadArr[circNum]);
-      // beatY = (cos(newAngle) * circRadArr[circNum]);
-      // console.log(beatX, beatY);
-
-
-
-
-
-      // using current x y position of beat and position of circle, get x y relative to circle
-      // calculate current angle in radians
-      // 2PIr = circumference
-      // add a constant deltaAngle to old angle. set to new angle. scale new angle to radius of circle.
-      // calculate xy pos with sin and cos.
-
-
-
-      // move a certain amount along the circumference (start with a default rate… distance(pixels?) per frame).
-
-
-
-    }
+  void addBeat(int x, int y, int cNum) {
+    beatX = x;
+    beatY = y;
+    circNum = cNum;
+    console.log(circNum);
   }
+
+  void drawBeat() {
+    fill(0,256,0);
+    ellipse(beatX, beatY, 3, 3);
+    noFill();
+  }
+
+  void incrementBeatPos() {
+    // beatX +=1;
+    // beatY +=1;
+
+    relBeatPosX = beatX - circPosArr[circNum].x;
+    relBeatPosY = beatY - circPosArr[circNum].y;
+    circumference = (2 * PI * circRadArr[circNum]);
+    console.log(relBeatPosX, relBeatPosY, circumference);
+
+    // newAngle = atan(relBeatPosY / relBeatPosX) + .001; //(speed / 1000);
+    // console.log(newAngle);
+    // beatX = (sin(newAngle) * circRadArr[circNum]);
+    // beatY = (cos(newAngle) * circRadArr[circNum]);
+    // console.log(beatX, beatY);
+
+
+
+
+
+    // using current x y position of beat and position of circle, get x y relative to circle
+    // calculate current angle in radians
+    // 2PIr = circumference
+    // add a constant deltaAngle to old angle. set to new angle. scale new angle to radius of circle.
+    // calculate xy pos with sin and cos.
+
+
+
+    // move a certain amount along the circumference (start with a default rate… distance(pixels?) per frame).
+
+
+
+  }
+}
