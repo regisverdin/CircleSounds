@@ -1,6 +1,3 @@
-// need to calculate correct position of beat, and display.
-/// currently reading through beat and curcle arrays correctly.
-
 // To Do: Make an option to turn off/on the display of circles. the beats moving look beautiful on their own, and create interesting patterns. could be a "presentation mode"
 
 /////////////////////////////////Connecting with javascript//////////////////////////
@@ -43,27 +40,22 @@ void draw(){
     //// 6: Draw and rotate all beats
     for (int j = 0; j < circleArray.get(i).beatArray.size(); j++) {
       circleArray.get(i).beatArray.get(j).drawBeat(i);
-      circleArray.get(i).beatArray.get(j).rotateBeat();
+      circleArray.get(i).beatArray.get(j).rotateBeat(i);
     }
   }
-
   mouseFunctions.findCircleMouseOver();
 }
 
 void mousePressed() {
+  if (key=='l') {
+    for (int i = 0; i < circleArray.size(); i++ ) {
+      // console.log("circle" + circleArray.get(i).radius);
 
-if (key=='l') {
-  for (int i = 0; i < circleArray.size(); i++ ) {
-    // console.log("circle" + circleArray.get(i).radius);
-
-    for (int j = 0; j < circleArray.get(i).beatArray.size(); j++) {
-      console.log("beat" + i+ j + "=" + circleArray.get(i).beatArray.get(j).relx + ', ' + circleArray.get(i).beatArray.get(j).rely);
-     }
+      for (int j = 0; j < circleArray.get(i).beatArray.size(); j++) {
+        console.log("beat" + i+ j + "=" + circleArray.get(i).beatArray.get(j).relx + ', ' + circleArray.get(i).beatArray.get(j).rely);
+       }
+    }
   }
-}
-  
-
-
   if (key == 'c') {
     circle = new Circle();
     circle.x = mouseX;
@@ -74,7 +66,6 @@ if (key=='l') {
   if (key == 'b' && mouseFunctions.mouseOnCircle == true){
     int i = mouseFunctions.findCircleMouseOver();
     circleArray.get(i).addBeat(mouseX, mouseY);
-    /// using circNum, get current circle mouse is over and add a new beat to it.
   }
 }
 
@@ -85,14 +76,6 @@ void mouseReleased() {
     circle.saveCircle();
   }
 }
-
-
-
-
-
-
-
-
 
 
 
@@ -137,7 +120,6 @@ class Circle {
     if (mouseFunctions.a > 0 && mouseFunctions.b < 0) {
       beat.angle += TWO_PI;
     }
-    // console.log(beat.angle);
     beatArray.add(beat);
   }
 }
@@ -146,35 +128,27 @@ class Beat extends Circle {
   float angle = 0; ///possible problem... maybe change to double or BigNumber
   int absx = 0;
   int absy = 0;
-  int relx = 0;
-  int rely = 0;
-  float rotationDistance = 0.01;
-
-/// drawbeat should do the following:
-//  use circle radius & beat angle to find position of beat relative to circle (in x,y form): cos and sin should work... but beware of quadrants.
-//  calculate absolute position of beat: add circle position to relative x,y
-//  draw ellipse
-
+  float rotationDistance = 10;
+  float radius; ///QUESTION: why does radius always return the most recent circle radius, instead of the superclass of the current beat? I.e. why do i need to use i..., and why can't i just access radius on the current object's superobject.
 
   void drawBeat(int i) {
-    /// find the x/y value of the beat using angle and radius
-    absx = int( (cos(angle) * circleArray.get(i).radius) + circleArray.get(i).x ); ///QUESTION: why does circle.radius always return the most recent circle radius, instead of the superclass of the current beat? I.e. why do i need to use i...
-    absy = int( (sin(angle) * circleArray.get(i).radius) + circleArray.get(i).y );
+    radius = circleArray.get(i).radius; /// see above question... why do i even have to define this?
+    absx = int( (cos(angle) * radius) + circleArray.get(i).x ); /// QUESTION: same as above
+    absy = int( (sin(angle) * radius) + circleArray.get(i).y );
 
     fill(0,256,0);
     ellipse(absx, absy, 3, 3);
     noFill();
   }
-
+  
   void rotateBeat() {
-    angle += rotationDistance;
+    angle += rotationDistance / (TWO_PI * radius); ////QUESTION: same as above
   }
-
 }
 
 class MouseFunctions {
   int a, b;
-  float c; /// This is the distance the mouse is from any circle's center.
+  float c; //// Distance of mouse from center of current circle in array.
   boolean mouseOnCircle = false;
 
   int findCircleMouseOver() {
@@ -182,24 +156,12 @@ class MouseFunctions {
     for (i = 0; i < circleArray.size(); i++) {
       a = mouseX - circleArray.get(i).x;
       b = mouseY - circleArray.get(i).y;
-      c = sqrt((a*a)+(b*b)); //// Distance of mouse from center of current circle in array.
+      c = sqrt((a*a)+(b*b));
 
       if ((c >= (circleArray.get(i).radius - 10) && (c <= (circleArray.get(i).radius + 10) ) )) { //// If distance is within acceptable range, do something.
         mouseOnCircle = true;
         circleArray.get(i).lineColors = {170, 170, 170};
         return i;
-        
-        //FINDS POINT ON CIRCLE CLOSEST TO MOUSE CLICK
-        // public float angle = asin(b/circRadArr[i]);
-///////
-        // angle = (angle * 180)/PI;
-        // console.log(angle);
-        // console.log(circRadArr[i]);
-////////        
-        // beatPosX = int(cos(angle)*circRadArr[i]);
-        // beatPosY = int(sin(angle)*circRadArr[i]);
-        
-        // i = circleArray.size(); /// end the loop
       } else {
         mouseOnCircle = false;
         circleArray.get(i).lineColors = {255, 255, 255};
