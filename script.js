@@ -25,7 +25,7 @@ function addNote(x) {
 var bound = false;
 
 function bindJavascript() {
-  var pjs = Processing.getInstanceById('maintest');
+  var pjs = Processing.getInstanceById('main');
   if(pjs!=null) {
     pjs.bindJavascript(this);
     bound = true;
