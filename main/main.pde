@@ -1,5 +1,8 @@
 // To Do: Make an option to turn off/on the display of circles. the beats moving look beautiful on their own, and create interesting patterns. could be a "presentation mode"
 
+/// need to make sure findIntersections is being correctly written to, and can be read from. Also, I may have messed up something in draw: make sure utilfunctions.findcircle is in right place.
+
+
 /////////////////////////////////Connecting with javascript//////////////////////////
 interface JavaScript {
   void showRadius(int x, int y);
@@ -39,16 +42,11 @@ void draw(){
     //// 6: Draw and rotate all beats, and check for collisions.
     for (int j = 0; j < circleArray.get(i).beatArray.size(); j++) {
       circleArray.get(i).beatArray.get(j).drawBeat(i);
-      circleArray.get(i).beatArray.get(j).checkForCollision();
+      circleArray.get(i).beatArray.get(j).checkForCollision(i,j);
       circleArray.get(i).beatArray.get(j).rotateBeat(i);
     }
   }
-  utilFunctions.findCircleMouseOver();
-  // 7: Calculate Intersection Points for each Circle
-  for (int i = 0; i < circleArray.size(); i++) {
-    for (int j = i+1; j < circleArray.size(); j++)
-      utilFunctions.findIntersections(i, j, circleArray.get(i).x, circleArray.get(i).y, circleArray.get(i).radius, circleArray.get(j).x, circleArray.get(j).y, circleArray.get(j).radius);
-  }
+  utilFunctions.findCircleMouseOver(); /// does this do anything??
 }
 
 void mousePressed() {
@@ -69,18 +67,19 @@ void mousePressed() {
     mouseVal = true;
   }
   //// 5: Add a beat when clicking mouse.
-  if (key == 'b' && utilFunctions.mouseOnCircle == true){
+  if (key == 'b' && utilFunctions.mouseOnCircle){
     int i = utilFunctions.findCircleMouseOver();
     circleArray.get(i).addBeat(mouseX, mouseY);
   }
 
   if (key == 'i') {
     int i = utilFunctions.findCircleMouseOver();
-    console.log(i);
-    for (int j = 0; j < circleArray.get(j).intersectArray.size() - 1; j++) {
+
+    for (int j = 0; j < circleArray.get(i).intersectArray.size(); j++) {
       console.log(circleArray.get(i).intersectArray.get(j));
     }
-  } 
+    console.log(circleArray.get(i).intersectArray.size());
+  }
 }
 
 void mouseReleased() {
@@ -88,6 +87,21 @@ void mouseReleased() {
   mouseVal = false;
   if (key == 'c') {
     circle.saveCircle();
+  }
+
+  // 7: Calculate Intersection Points for each Circle (need to add this to other places later, if circles are moving on their own, or sound should change when user drags them)
+  // Clear all current arraylists of intersections first
+  for (int i = 0; i < circleArray.size() - 1; i++) {
+    circleArray.get(i).intersectArray.clear();
+    for (int j = i+1; j < circleArray.size(); j++) {
+      circleArray.get(j).intersectArray.clear();
+    }
+  }
+  // Find all intersections
+  for (int i = 0; i < circleArray.size() - 1; i++) {
+    for (int j = i+1; j < circleArray.size(); j++) {
+      utilFunctions.findIntersections(i, j, circleArray.get(i).x, circleArray.get(i).y, circleArray.get(i).radius, circleArray.get(j).x, circleArray.get(j).y, circleArray.get(j).radius);
+    }
   }
 }
 
@@ -97,13 +111,13 @@ void mouseReleased() {
 
 ///////////////////////////////////////////////
 
-class Circle {
+public class Circle {
   int x = 0;
   int y = 0;
-  float radius = 0; ///possible problem area... make sure int vs. float is correct
+  protected float radius = 0; ///possible problem area... make sure int vs. float is correct
   int[] lineColors = {255, 255, 255};
-  ArrayList<Beat> beatArray = new ArrayList<Beat>(); /// creates an arraylist of beats for each instance of Circle.
-  ArrayList<int[]> intersectArray = new ArrayList<int[]>();/// holds positions of intersections. used by beat.
+  protected ArrayList<Beat> beatArray = new ArrayList<Beat>(); /// creates an arraylist of beats for each instance of Circle.
+  protected ArrayList<int[]> intersectArray = new ArrayList<int[]>();/// holds positions of intersections. used by beat.
 
   void drawTempCircle() {
     int a = abs(x-mouseX);
@@ -139,21 +153,21 @@ class Circle {
 
     /// A workaround so beat objects can access index of their parent object.
     beat.parentIndex = circleArray.indexOf(this);
-    console.log(beat.parentIndex);
+
   }
 }
 
-class Beat extends Circle {
+public class Beat extends Circle {
   float angle = 0; ///possible problem... maybe change to double or BigNumber
   int absX = 0;
   int absY = 0;
-  float rotationDistance = 10;
+  float rotationDistance = 1; // This is the Tempo... maybe. If too fast, beats will not be detected as colliding. Change tempo with the animation rate?
   float radius; ///QUESTION: why does radius always return the most recent circle radius, instead of the superclass of the current beat? I.e. why do i need to use i..., and why can't i just access radius on the current object's superobject.
   int parentIndex;
   boolean beatOnCircle = false;
 
   void drawBeat(int i) {
-    radius = circleArray.get(i).radius; /// see above question... why do i even have to define this?
+    radius = circleArray.get(i).radius; /// see above question... why do i even have to define this? scope issue?
     absX = int( (cos(angle) * radius) + circleArray.get(i).x ); /// QUESTION: same as above
     absY = int( (sin(angle) * radius) + circleArray.get(i).y );
 
@@ -164,30 +178,49 @@ class Beat extends Circle {
   
   void rotateBeat() {
     angle += rotationDistance / (TWO_PI * radius); ////QUESTION: same as above
+    // console.log(absX + " " + absY);
   }
 
-  // void checkForCollision() {
+  void checkForCollision(int i, int j) {
+    // console.log(circleArray.get(parentIndex).intersectArray.get(0));
 
-  //   for (i = 0; i < circleArray.size(); i++) {
-  //     if (i != parentIndex) {           /// Excludes own circle from loop, else always true.
-  //       a = absX - circleArray.get(i).x;
-  //       b = absY - circleArray.get(i).y;
-  //       c = sqrt((a*a)+(b*b));
-
-  //       if ((c >= circleArray.get(i).radius -1) && (c <= circleArray.get(i).radius +1)) { /// QUESTION: Might cause problems, check this range.
-  //         beatOnCircle = true;
-  //         console.log(beatOnCircle);
-  //         circleArray.get(parentIndex).lineColors = {0, 200, 170};
-  //       } else {
-  //         beatOnCircle = false;
-  //         circleArray.get(parentIndex).lineColors = {255, 255, 255};
-  //       }
-  //     }
-  //   }
-  // }
+    if (intersectArray.contains([absX, absY])) {
+      console.log("BANG");
+      beatOnCircle = true;
+      console.log(beatOnCircle);
+      circleArray.get(parentIndex).lineColors = {0, 200, 170};
+    } else {
+      beatOnCircle = false;
+      console.log(beatOnCircle);
+      circleArray.get(parentIndex).lineColors = {255, 255, 255};
+    }
+  }
 }
 
-class UtilFunctions {
+// Need this class because of equals method issue when using arraylist's contains method, in my checkForCollision method.
+public class PointObj {
+  int x;
+  int y;
+ 
+  PointObj (int x, int y)
+  {
+    this.x = x;
+    this.y = y;
+  }
+  
+  boolean equals(Object pointObj)
+  {
+    //Make sure we can compare these
+    if(!(pointObj instanceof PointObj))
+      return;
+    
+   
+    //Cast the object to a Point and compare
+    return this.x == ((PointObj) pointObj).x && this.y == ((PointObj) pointObj).y;
+  }
+}
+
+public class UtilFunctions {
   int a, b;
   float c; //// Distance of mouse from center of current circle in array.
   boolean mouseOnCircle = false;
@@ -239,9 +272,11 @@ class UtilFunctions {
     int yi1 = int(y2 + ry);
     int yi2 = int(y2 - ry);
 
+
     circleArray.get(i).intersectArray.add([xi1, yi1]);
-    circleArray.get(i).intersectArray.add([xi2, yi2]); 
+    circleArray.get(i).intersectArray.add([xi2, yi2]);
     circleArray.get(j).intersectArray.add([xi1, yi1]);
     circleArray.get(j).intersectArray.add([xi2, yi2]);
+
   }
 }
