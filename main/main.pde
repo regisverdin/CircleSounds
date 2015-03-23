@@ -5,8 +5,10 @@
 
 /////////////////////////////////Connecting with javascript//////////////////////////
 interface JavaScript {
-  void showRadius(int x, int y);
-  void addNote(int x);
+  // void showRadius(int x, int y);
+  // void addNote(int x);
+  void playSound();
+  boolean noteOn;
 }
 
 void bindJavascript(JavaScript js) {
@@ -24,7 +26,7 @@ UtilFunctions utilFunctions = new UtilFunctions();
 
 void setup(){
   size(1000, 1000);
-  frameRate(100);
+  frameRate(70);
   ellipseMode(RADIUS);
   noFill();
   key = 'c';
@@ -117,7 +119,7 @@ public class Circle {
   protected float radius = 0; ///possible problem area... make sure int vs. float is correct
   int[] lineColors = {255, 255, 255};
   protected ArrayList<Beat> beatArray = new ArrayList<Beat>(); /// creates an arraylist of beats for each instance of Circle.
-  protected ArrayList<int[]> intersectArray = new ArrayList<int[]>();/// holds positions of intersections. used by beat.
+  protected ArrayList<PointObj> intersectArray = new ArrayList<PointObj>();/// holds positions of intersections. used by beat.
 
   void drawTempCircle() {
     int a = abs(x-mouseX);
@@ -158,13 +160,13 @@ public class Circle {
 }
 
 public class Beat extends Circle {
-  float angle = 0; ///possible problem... maybe change to double or BigNumber
+  float angle = 0;
   int absX = 0;
   int absY = 0;
-  float rotationDistance = 1; // This is the Tempo... maybe. If too fast, beats will not be detected as colliding. Change tempo with the animation rate?
+  float rotationDistance = 10; // This is the Tempo... maybe. If too fast, beats will not be detected as colliding. Change tempo with the animation rate? Interpolate?
   float radius; ///QUESTION: why does radius always return the most recent circle radius, instead of the superclass of the current beat? I.e. why do i need to use i..., and why can't i just access radius on the current object's superobject.
   int parentIndex;
-  boolean beatOnCircle = false;
+  private boolean beatOnCircle = false;
 
   void drawBeat(int i) {
     radius = circleArray.get(i).radius; /// see above question... why do i even have to define this? scope issue?
@@ -177,22 +179,28 @@ public class Beat extends Circle {
   }
   
   void rotateBeat() {
+    /// FUTURE PROBLEM TO FIX: angle indefinitely increases. Need to stop this... before memory problems
     angle += rotationDistance / (TWO_PI * radius); ////QUESTION: same as above
     // console.log(absX + " " + absY);
   }
 
   void checkForCollision(int i, int j) {
-    // console.log(circleArray.get(parentIndex).intersectArray.get(0));
 
-    if (intersectArray.contains([absX, absY])) {
-      console.log("BANG");
+    testPoint = new PointObj(absX, absY);
+
+    if (circleArray.get(parentIndex).intersectArray.contains(testPoint)) {
       beatOnCircle = true;
       console.log(beatOnCircle);
-      circleArray.get(parentIndex).lineColors = {0, 200, 170};
+      console.log(this);
+      // circleArray.get(parentIndex).lineColors = {0, 200, 170};
+      // javascript.playSound(beatOnCircle, circleArray.get(parentIndex).radius);
+      javascript.noteOn = true;
     } else {
       beatOnCircle = false;
-      console.log(beatOnCircle);
-      circleArray.get(parentIndex).lineColors = {255, 255, 255};
+      // javascript.playSound(beatOnCircle, circleArray.get(parentIndex).radius);
+      javascript.noteOn = false;
+
+      // circleArray.get(parentIndex).lineColors = {255, 255, 255};
     }
   }
 }
@@ -207,14 +215,13 @@ public class PointObj {
     this.x = x;
     this.y = y;
   }
-  
+
   boolean equals(Object pointObj)
   {
     //Make sure we can compare these
     if(!(pointObj instanceof PointObj))
       return;
     
-   
     //Cast the object to a Point and compare
     return this.x == ((PointObj) pointObj).x && this.y == ((PointObj) pointObj).y;
   }
@@ -242,6 +249,7 @@ public class UtilFunctions {
       }
     }
   }
+
   void findIntersections(i, j, x0, y0, r0, x1, y1, r1) {
     // using this: http://justbasic.wikispaces.com/Check+for+collision+of+two+circles,+get+intersection+points
     // Get distance d between circle centers
@@ -272,11 +280,15 @@ public class UtilFunctions {
     int yi1 = int(y2 + ry);
     int yi2 = int(y2 - ry);
 
+    a = new PointObj(xi1, yi1);
+    b = new PointObj(xi2, yi2);
+    c = new PointObj(xi1, yi1);
+    d = new PointObj(xi2, yi2);
 
-    circleArray.get(i).intersectArray.add([xi1, yi1]);
-    circleArray.get(i).intersectArray.add([xi2, yi2]);
-    circleArray.get(j).intersectArray.add([xi1, yi1]);
-    circleArray.get(j).intersectArray.add([xi2, yi2]);
+    circleArray.get(i).intersectArray.add(a);
+    circleArray.get(i).intersectArray.add(b);
+    circleArray.get(j).intersectArray.add(c);
+    circleArray.get(j).intersectArray.add(d);
 
   }
 }
