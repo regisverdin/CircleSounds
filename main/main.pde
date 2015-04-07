@@ -6,8 +6,8 @@ interface JavaScript {
   // void showRadius(int x, int y);
   // void addNote(int x);
   // void newCircle();
-  void attack(int parentIndex);
-  void makeCircleSynth(float radius);
+  void attack(int circleIndex, int beatIndex);
+  void makeBeatSynth(float radius, int circleIndex, int beatIndex);
 
 }
 
@@ -129,7 +129,6 @@ public class Circle {
   }
   void saveCircle() {
     circleArray.add(this);
-    javascript.makeCircleSynth(this.radius);
   }
   void drawFinalCircle() {
     int r = lineColors[0];
@@ -156,6 +155,9 @@ public class Circle {
 
     /// A workaround so beat objects can access index of their parent object.
     beat.parentIndex = circleArray.indexOf(this);
+    beat.myIndex = beatArray.indexOf(beat);
+
+    javascript.makeBeatSynth(radius, beat.parentIndex, beat.myIndex);
 
   }
 }
@@ -167,6 +169,7 @@ public class Beat extends Circle {
   float rotationDistance = 5; // This is the Tempo... maybe. If too fast, beats will not be detected as colliding. Change tempo with the animation rate? Interpolate?
   float radius; ///QUESTION: why does radius always return the most recent circle radius, instead of the superclass of the current beat? I.e. why do i need to use i..., and why can't i just access radius on the current object's superobject.
   int parentIndex;
+  int myIndex;
   private boolean beatOnCircle = false;
   int r = 0;
   int g = 256;
@@ -194,8 +197,9 @@ public class Beat extends Circle {
 
     if (circleArray.get(parentIndex).intersectArray.contains(testPoint)) { ///Instead of this, check if angle >= 2PI beyond the testpoint. 
       beatOnCircle = true;
-      console.log(parentIndex);
-      javascript.attack(parentIndex);
+      circleIndex = parentIndex;
+      beatIndex = myIndex;
+      javascript.attack(circleIndex, beatIndex);
       
     } else {
       beatOnCircle = false;

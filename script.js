@@ -84,7 +84,20 @@ if (contextClass) {
 // }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-var circleBank = [];
+
+// Create a compressor node
+var compressor = context.createDynamicsCompressor();
+compressor.threshold.value = -20;
+compressor.knee.value = 40;
+compressor.ratio.value = 0.5;
+compressor.reduction.value = -20;
+compressor.attack.value = 0.1;
+compressor.release.value = 0.25;
+compressor.connect(context.destination);
+
+
+
+var voiceBank = {};
 
 var Voice = (function(context) {
   function Voice(frequency){
@@ -99,16 +112,15 @@ var Voice = (function(context) {
 
     this.vco.frequency.value = this.frequency;
     this.vca.gain.value = 0.0;
-
     this.vco.connect(this.vca);
-    this.vca.connect(context.destination);
+    this.vca.connect(compressor);
 
     this.vco.start(0);
   };
 
   Voice.prototype.trigger = function() {
     now = context.currentTime;
-    
+
     this.vca.gain.cancelScheduledValues(now);
     this.vca.gain.linearRampToValueAtTime(0, now + 0.1);
     this.vca.gain.linearRampToValueAtTime(0.7, now + 0.5);
@@ -122,32 +134,25 @@ var Voice = (function(context) {
 
 
 
-function makeCircleSynth(radius) {
+function makeBeatSynth(radius, circleIndex, beatIndex) {
   var frequency = 2 * radius;
-  console.log(frequency);
   var voice = new Voice(frequency);
-  circleBank.push(voice);
+
+  if (!voiceBank[circleIndex]) {
+    voiceBank[circleIndex] = {};
+  }
+  voiceBank[circleIndex][beatIndex] = voice;
   voice.start();
 }
 
-function attack(parentIndex) {
-  var circleSynth = circleBank[parentIndex];
-  if (circleSynth.vca.gain >= 0) { 
-    circleSynth.decay();
-  }
+function attack(circleIndex, beatIndex) {
+
+  var circleSynth = voiceBank[circleIndex][beatIndex];
+  console.log(circleSynth);
+
   circleSynth.trigger();
 
-
-  // circleSynth.vco.gain.linearRampToValueAtTime(1.0, now + 0.5);
-  // circleSynth.vco.gain.linearRampToValueAtTime(0.0, now + 1.0);
-  // circleSynth.vco.gain.linearRampToValueAtTime(1.0, now + 1.5);
-  // circleSynth.vco.gain.linearRampToValueAtTime(0.0, now + 2.0);
-  // circleSynth.vco.gain.linearRampToValueAtTime(1.0, now + 2.5);
 }
-
-
-
-
 
 
 
