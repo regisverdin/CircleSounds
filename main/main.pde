@@ -1,14 +1,14 @@
-// To Do: Make an option to turn off/on the display of circles. the beats moving look beautiful on their own, and create interesting patterns. could be a "presentation mode"
-
-/// need to make sure findIntersections is being correctly written to, and can be read from. Also, I may have messed up something in draw: make sure utilfunctions.findcircle is in right place.
+// To Do: Make an option to turn off/on the display of circles. could be a "presentation mode".
 
 
 /////////////////////////////////Connecting with javascript//////////////////////////
 interface JavaScript {
   // void showRadius(int x, int y);
   // void addNote(int x);
-  void playSound();
-  boolean noteOn;
+  // void newCircle();
+  void attack(int parentIndex);
+  void makeCircleSynth(float radius);
+
 }
 
 void bindJavascript(JavaScript js) {
@@ -25,8 +25,8 @@ ArrayList<Circle> circleArray = new ArrayList<Circle>(); //creates an arraylist 
 UtilFunctions utilFunctions = new UtilFunctions();
 
 void setup(){
-  size(1000, 1000);
-  frameRate(70);
+  size(1500, 1000);
+  frameRate(300);
   ellipseMode(RADIUS);
   noFill();
   key = 'c';
@@ -129,6 +129,7 @@ public class Circle {
   }
   void saveCircle() {
     circleArray.add(this);
+    javascript.makeCircleSynth(this.radius);
   }
   void drawFinalCircle() {
     int r = lineColors[0];
@@ -163,17 +164,20 @@ public class Beat extends Circle {
   float angle = 0;
   int absX = 0;
   int absY = 0;
-  float rotationDistance = 10; // This is the Tempo... maybe. If too fast, beats will not be detected as colliding. Change tempo with the animation rate? Interpolate?
+  float rotationDistance = 5; // This is the Tempo... maybe. If too fast, beats will not be detected as colliding. Change tempo with the animation rate? Interpolate?
   float radius; ///QUESTION: why does radius always return the most recent circle radius, instead of the superclass of the current beat? I.e. why do i need to use i..., and why can't i just access radius on the current object's superobject.
   int parentIndex;
   private boolean beatOnCircle = false;
+  int r = 0;
+  int g = 256;
+  int b = 0;
 
   void drawBeat(int i) {
-    radius = circleArray.get(i).radius; /// see above question... why do i even have to define this? scope issue?
+    radius = circleArray.get(i).radius; /// see above question... why do i even have to define this, when circle's radius is protected?
     absX = int( (cos(angle) * radius) + circleArray.get(i).x ); /// QUESTION: same as above
     absY = int( (sin(angle) * radius) + circleArray.get(i).y );
 
-    fill(0,256,0);
+    fill(r,g,b);
     ellipse(absX, absY, 3, 3);
     noFill();
   }
@@ -188,19 +192,13 @@ public class Beat extends Circle {
 
     testPoint = new PointObj(absX, absY);
 
-    if (circleArray.get(parentIndex).intersectArray.contains(testPoint)) {
+    if (circleArray.get(parentIndex).intersectArray.contains(testPoint)) { ///Instead of this, check if angle >= 2PI beyond the testpoint. 
       beatOnCircle = true;
-      console.log(beatOnCircle);
-      console.log(this);
-      // circleArray.get(parentIndex).lineColors = {0, 200, 170};
-      // javascript.playSound(beatOnCircle, circleArray.get(parentIndex).radius);
-      javascript.noteOn = true;
+      console.log(parentIndex);
+      javascript.attack(parentIndex);
+      
     } else {
       beatOnCircle = false;
-      // javascript.playSound(beatOnCircle, circleArray.get(parentIndex).radius);
-      javascript.noteOn = false;
-
-      // circleArray.get(parentIndex).lineColors = {255, 255, 255};
     }
   }
 }
