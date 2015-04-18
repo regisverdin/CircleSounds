@@ -8,6 +8,7 @@ interface JavaScript {
   // void newCircle();
   void attack(int circleIndex, int beatIndex);
   void makeBeatSynth(float radius, int circleIndex, int beatIndex);
+  void displayRadius(int rad, int x, int y);
 
 }
 
@@ -18,11 +19,12 @@ void bindJavascript(JavaScript js) {
 JavaScript javascript;
 //////////////////////////////////////////////////////////////////////////////////////
 
-
 boolean mouseVal = false;
 Circle circle;
 ArrayList<Circle> circleArray = new ArrayList<Circle>(); //creates an arraylist for circle objects, and specifies the type in angle brackets(required!). automatically resizable.
 UtilFunctions utilFunctions = new UtilFunctions();
+
+
 
 void setup(){
   size(1500, 1000);
@@ -33,10 +35,12 @@ void setup(){
 }
 
 void draw(){
-  background(100, 100, 100);
+  background(0, 0, 0);
   ///// 2: Draw new circle, while continually refreshing the background.
+
   if(mouseVal==true && key == 'c'){
     circle.drawTempCircle();
+
   }
   ////// 4: Draw all circles added, by looping through arraylist.
   for (int i = 0; i < circleArray.size(); i++ ) {
@@ -45,6 +49,7 @@ void draw(){
     for (int j = 0; j < circleArray.get(i).beatArray.size(); j++) {
       circleArray.get(i).beatArray.get(j).drawBeat(i);
       circleArray.get(i).beatArray.get(j).checkForCollision(i,j);
+      
       circleArray.get(i).beatArray.get(j).rotateBeat(i);
     }
   }
@@ -82,6 +87,12 @@ void mousePressed() {
     }
     console.log(circleArray.get(i).intersectArray.size());
   }
+
+  if (key =='d'  && utilFunctions.mouseOnCircle) {
+    int i = utilFunctions.findCircleMouseOver();
+    circleArray.remove(i);
+  }
+
 }
 
 void mouseReleased() {
@@ -116,31 +127,37 @@ void mouseReleased() {
 public class Circle {
   int x = 0;
   int y = 0;
-  protected float radius = 0; ///possible problem area... make sure int vs. float is correct
-  int[] lineColors = {255, 255, 255};
+  protected int radius = 0; ///possible problem area... make sure int vs. float is correct
+  int[] lineColors = {58, 230, 120};
   protected ArrayList<Beat> beatArray = new ArrayList<Beat>(); /// creates an arraylist of beats for each instance of Circle.
   protected ArrayList<PointObj> intersectArray = new ArrayList<PointObj>();/// holds positions of intersections. used by beat.
 
   void drawTempCircle() {
     int a = abs(x-mouseX);
     int b = abs(y-mouseY);
-    radius = sqrt((a*a)+(b*b));
+    radius = int(sqrt((a*a)+(b*b)));
+    stroke(58, 230, 120);
     ellipse(x, y, radius, radius);
+    console.log(radius);
+    javascript.displayRadius(radius, mouseX, mouseY);
   }
   void saveCircle() {
     circleArray.add(this);
+    javascript.removeRadDisplay();
   }
   void drawFinalCircle() {
     int r = lineColors[0];
     int g = lineColors[1];
     int b = lineColors[2];
 
-    stroke(r, g, b);
+    stroke(58, 230, 120);
     ellipse(x, y, radius, radius);
+
   }
   void addBeat() {
     Beat beat = new Beat();
     // console.log(utilFunctions.a, utilFunctions.b);
+    beat.startTime = context.currentTime;
     beat.angle = asin(utilFunctions.b/utilFunctions.c);
 
     float compliment = PI - beat.angle; /// Find complimentary angle... needed for finding which quadrant beat is in. See Arcsin relation (not function!) for details...http://mathonweb.com/help_ebook/html/functions_2.htm
@@ -163,17 +180,21 @@ public class Circle {
 }
 
 public class Beat extends Circle {
-  float angle = 0;
+  float angle;
   int absX = 0;
   int absY = 0;
-  float rotationDistance = 5; // This is the Tempo... maybe. If too fast, beats will not be detected as colliding. Change tempo with the animation rate? Interpolate?
+  float linearVel = 5; // This is the Tempo... maybe. If too fast, beats will not be detected as colliding. Change tempo with the animation rate? Interpolate?
   float radius; ///QUESTION: why does radius always return the most recent circle radius, instead of the superclass of the current beat? I.e. why do i need to use i..., and why can't i just access radius on the current object's superobject.
   int parentIndex;
   int myIndex;
   private boolean beatOnCircle = false;
-  int r = 0;
-  int g = 256;
-  int b = 0;
+  int r = 220;
+  int g = 145;
+  int b = 45;
+  private float startTime;
+  private float deltaTime = 0.0;
+  private float prevTime = startTime;
+
 
   void drawBeat(int i) {
     radius = circleArray.get(i).radius; /// see above question... why do i even have to define this, when circle's radius is protected?
@@ -186,9 +207,18 @@ public class Beat extends Circle {
   }
   
   void rotateBeat() {
+
     /// FUTURE PROBLEM TO FIX: angle indefinitely increases. Need to stop this... before memory problems
-    angle += rotationDistance / (TWO_PI * radius); ////QUESTION: same as above
-    // console.log(absX + " " + absY);
+  
+    // deltaTime = context.currentTime - prevTime;
+    // prevTime = context.currentTime;
+    // angle += (12/(TWO_PI * radius)) * (1 + deltaTime);
+
+
+
+    angle += linearVel / (TWO_PI * radius); ////QUESTION: same as above
+    
+
   }
 
   void checkForCollision(int i, int j) {
@@ -235,7 +265,7 @@ public class UtilFunctions {
   boolean mouseOnCircle = false;
 
   int findCircleMouseOver() {
-
+ 
     for (i = 0; i < circleArray.size(); i++) {
       a = mouseX - circleArray.get(i).x;
       b = mouseY - circleArray.get(i).y;

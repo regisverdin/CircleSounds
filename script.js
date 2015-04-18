@@ -1,4 +1,4 @@
-// //////////////////////Web Audio///////////////////////
+// //////////////////////Create Web Audio Context///////////////////////
 
 var contextClass = (window.AudioContext || 
   window.webkitAudioContext || 
@@ -12,89 +12,22 @@ if (contextClass) {
   // Web Audio API is not available. Ask the user to use a supported browser.
 }
 
-////////////// Functions called by Processing //////////////
-
-// function showRadius(r) {
-//   document.getElementById('radius').value = r;
-// }
-
-// /* VCO */
-// var vco = context.createOscillator();
-// vco.type = vco.SIN;
-// vco.frequency.value = this.frequency;
-// vco.start(0);
-
-//  VCA 
-// var vca = context.createGain();
-// vca.gain.value = 0;
-
-// /* Connections */
-// vco.connect(vca);
-// vca.connect(context.destination);
-
-// function playSound(freq) {
-
-//   vco.frequency.value = 1000 - freq * 3 ;
-//   vca.gain.value = 1;
-//   window.setTimeout(function() {vca.gain.value = 0}, 100);
-// }
+////////////// Web Audio Functions called by Processing //////////////
 
 
-///////////////////////////////////////////////////////////////////
-
-
-// var synthMap = {};
-
-// // Each time a circle is made in processing, make a new synth object. Add to synthMap object.
-// function newCircle(id) {
-//   var synth = new Synth(id);
-//   synthMap[id] = synth;
-// }
-
-
-// function Synth(freq) {
-
-//   /* VCO */
-//   var vco = context.createOscillator();
-//   vco.type = vco.SIN;
-//   vco.frequency.value = this.frequency;
-//   vco.start(0);
-
-//   /* VCA */
-//   var vca = context.createGain();
-//   vca.gain.value = 0;
-
-//    Connections 
-//   vco.connect(vca);
-//   vca.connect(context.destination);
-
-// //   vco.frequency.value = 1000 - freq * 3 ;
-// //   vca.gain.value = 1;
-// //   window.setTimeout(function() {vca.gain.value = 0}, 100);
-// // }
-
-// function attack(id) {
-//   synth = synthMap[id];
-//   console.log("hello");
-//   synth.vco.frequency.value = 1000 - freq * 3 ;
-//   synth.vca.gain.value = 1;
-//   window.setTimeout(function() {synth.vca.gain.value = 0}, 100);
-// }
-//   // envelope here
-// }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
+var masterGain = context.createGain();
+masterGain.gain.value = 0.8;
+masterGain.connect(context.destination);
 
 // Create a compressor node
 var compressor = context.createDynamicsCompressor();
-compressor.threshold.value = -20;
-compressor.knee.value = 40;
-compressor.ratio.value = 0.5;
+compressor.threshold.value = -24;
+compressor.knee.value = 0;
+compressor.ratio.value = 20;
 compressor.reduction.value = -20;
-compressor.attack.value = 0.1;
+compressor.attack.value = 0.0001;
 compressor.release.value = 0.25;
-compressor.connect(context.destination);
-
+compressor.connect(masterGain);
 
 
 var voiceBank = {};
@@ -121,13 +54,19 @@ var Voice = (function(context) {
   Voice.prototype.trigger = function() {
     now = context.currentTime;
 
+    cancelTime = 0.01;
+    attackTime = 0.05;
+    decayTime = 0.1;
     this.vca.gain.cancelScheduledValues(now);
-    this.vca.gain.linearRampToValueAtTime(0, now + 0.1);
-    this.vca.gain.linearRampToValueAtTime(0.7, now + 0.5);
-    this.vca.gain.linearRampToValueAtTime(0, now + 0.5 + 1.5);
 
+
+   
+    console.log(this);
+    this.vca.gain.linearRampToValueAtTime(0, now + cancelTime);
+    this.vca.gain.linearRampToValueAtTime(0.6, now + cancelTime + attackTime);
+    this.vca.gain.linearRampToValueAtTime(0, now + cancelTime + attackTime + decayTime);
+    
   };
-
 
   return Voice;
 })(context);
@@ -136,7 +75,7 @@ var Voice = (function(context) {
 
 function makeBeatSynth(radius, circleIndex, beatIndex) {
   var frequency = 2 * radius;
-  var voice = new Voice(frequency);
+  var voice     = new Voice(frequency);
 
   if (!voiceBank[circleIndex]) {
     voiceBank[circleIndex] = {};
@@ -146,17 +85,30 @@ function makeBeatSynth(radius, circleIndex, beatIndex) {
 }
 
 function attack(circleIndex, beatIndex) {
-
   var circleSynth = voiceBank[circleIndex][beatIndex];
-  console.log(circleSynth);
 
   circleSynth.trigger();
 
 }
 
 
+///////////// Other JS functions called by Processing ///////////////////
 
+function displayRadius(rad, x, y) {
+  // add the newly created element and its content into the DOM 
+  var currentDiv = document.getElementById("cursorTip"); 
+  currentDiv.style.display = 'inline';
+  currentDiv.innerHTML = rad;
+  currentDiv.style.left = x + 'px';
+  currentDiv.style.top = y + 'px';
+}
 
+function removeRadDisplay() {
+  console.log("mouseup");
+  var currentDiv = document.getElementById("cursorTip");
+  currentDiv.style.display = 'none';
+
+}
 
 
 
